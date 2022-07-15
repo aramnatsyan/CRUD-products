@@ -7,6 +7,7 @@ use App\Models\ProductCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Product;
 
 class ProductCategoryController extends Controller
 {
@@ -142,7 +143,7 @@ class ProductCategoryController extends Controller
     public function destroy($id)
     {
         if (is_numeric($id)) {
-            $productWithThisCategory = Products::where('cat_id', '=', $id)->get();
+            $productWithThisCategory = Product::where('category_id', '=', $id)->get();
             if (!empty($productWithThisCategory->all())) {
                 return response()->json([
                     'status' => false,
