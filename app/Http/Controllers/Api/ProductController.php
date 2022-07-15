@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as ResponseAlias;
@@ -34,68 +35,163 @@ class ProductController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return ResponseAlias
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
-     * @param  \App\Http\Requests\StoreProductRequest  $request
-     * @return ResponseAlias
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function store(StoreProductRequest $request)
+    public function store(Request $request)
     {
-        //
+        $validateProduct = Validator::make($request->all(),
+            [
+                'name' => 'required|string',
+                'category_id' => 'required|integer',
+                'price' => 'required|integer',
+            ]);
+
+        if ($validateProduct->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation error',
+                'errors' => $validateProduct->errors()
+            ], 401);
+        }
+
+        if ($category = ProductCategory::find($request->category_id)) {
+
+            $product = new Product();
+
+            foreach ($request->all() as $key => $val) {
+                $product->$key = $val;
+            }
+
+            $product->category_name = $category->name;
+
+            if ($product->save()) {
+                return response()->json([
+                    'status' => true,
+                    'response' => $product->id,
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'response' => 'Something went wrong',
+                ], 500);
+            }
+
+        } else {
+            return response()->json([
+                'status' => false,
+                'response' => 'Category not found',
+            ], 404);
+        }
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Product  $product
-     * @return ResponseAlias
+     * @param $id
+     * @return JsonResponse
      */
-    public function show(Product $product)
+    public function show($id)
     {
-        //
-    }
+        $product = Product::find($id);
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Product  $product
-     * @return ResponseAlias
-     */
-    public function edit(Product $product)
-    {
-        //
+        if (!$product) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Product not found',
+            ], 404);
+        }
+        return response()->json([
+            'status' => true,
+            'response' => $product,
+        ], 200);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \App\Http\Requests\UpdateProductRequest  $request
-     * @param  \App\Models\Product  $product
-     * @return ResponseAlias
+     * @param Request $request
+     * @param $id
+     * @return JsonResponse
      */
-    public function update(UpdateProductRequest $request, Product $product)
+    public function update(Request $request, $id)
     {
-        //
+        $validateProduct = Validator::make($request->all(),
+            [
+                'name' => 'required|string',
+                'category_id' => 'required|integer',
+                'price' => 'required|integer',
+                'is_published' => 'required|boolean',
+            ]);
+
+        if ($validateProduct->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation error',
+                'errors' => $validateProduct->errors()
+            ], 401);
+        }
+
+        if ($category = ProductCategory::find($request->category_id)) {
+
+            $product = Product::find($id);
+
+            if (!is_null($product)) {
+                foreach ($request->all() as $key => $val) {
+                    $product->$key = $val;
+                }
+
+                $product->save();
+
+                return response()->json([
+                    'status' => true,
+                    'response' => $product,
+                    'message' => 'Product successfully updated',
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Product not found',
+                ], 404);
+            }
+
+        } else {
+            return response()->json([
+                'status' => false,
+                'response' => 'Category not found',
+            ], 404);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Product  $product
+     * @param Product $product
      * @return ResponseAlias
      */
-    public function destroy(Product $product)
+    public function destroy($id)
     {
-        //
+        if (is_numeric($id)) {
+            if (ProductCategory::destroy($id)) {
+                ProductAndCategory::where('product_id', '=', $id)->delete();
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Product successfully deleted',
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Product not deleted, Please try again letter.',
+                ], 404);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid parameter',
+            ], 404);
+        }
     }
 }
