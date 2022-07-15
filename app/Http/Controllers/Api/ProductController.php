@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductsAndCategories;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as ResponseAlias;
@@ -175,7 +176,7 @@ class ProductController extends Controller
     {
         if (is_numeric($id)) {
             if (ProductCategory::destroy($id)) {
-                ProductAndCategory::where('product_id', '=', $id)->delete();
+                ProductsAndCategories::where('product_id', '=', $id)->delete();
 
                 return response()->json([
                     'status' => true,
