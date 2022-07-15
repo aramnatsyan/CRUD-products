@@ -174,10 +174,11 @@ class ProductController extends Controller
      */
     public function destroy($id)
     {
-        if (is_numeric($id)) {
-            if (ProductCategory::destroy($id)) {
-                ProductsAndCategories::where('product_id', '=', $id)->delete();
+        $product = Product::find($id);
+        $product->is_deleted = true;
 
+        if (is_numeric($id)) {
+            if ($product->save()) {
                 return response()->json([
                     'status' => true,
                     'message' => 'Product successfully deleted',
