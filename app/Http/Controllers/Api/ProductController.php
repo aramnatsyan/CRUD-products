@@ -69,6 +69,19 @@ class ProductController extends Controller
             $product->category_name = $category->name;
 
             if ($product->save()) {
+
+                $productAndCategory = ProductsAndCategories::where('product_id', '=', $product->id)
+                    ->orWhere('category_id', '=', $request->category_id)->first();
+
+                if (is_null($productAndCategory)) {
+                    $newProdCat = new ProductsAndCategories();
+
+                    $newProdCat->product_id = $product->id;
+                    $newProdCat->category_id = $request->category_id;
+
+                    $newProdCat->save();
+                }
+
                 return response()->json([
                     'status' => true,
                     'response' => $product->id,
@@ -140,6 +153,12 @@ class ProductController extends Controller
             $product = Product::find($id);
 
             if (!is_null($product)) {
+
+                ProductsAndCategories::where('product_id', '=', $product->id)
+                    ->orWhere('category_id', '=', $product->category_id)->update([
+                        'category_id' => $request->category_id
+                    ]);;
+
                 foreach ($request->all() as $key => $val) {
                     $product->$key = $val;
                 }

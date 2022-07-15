@@ -16,6 +16,7 @@ class CreateProductsAndCategoriesTable extends Migration
         Schema::create('products_and_categories', function (Blueprint $table) {
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('category_id');
+            $table->timestamps();
 
             //FOREIGN KEY CONSTRAINTS
             $table->foreign('product_id')->references('id')->on('products');
